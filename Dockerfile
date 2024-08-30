@@ -40,6 +40,10 @@ ENV NODE_ENV production
 
 EXPOSE 8080
 
+RUN apt-get update ; \
+    apt-get --no-install-recommends install -y chromium ; \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
 COPY --from=deps --chown=node:node /usr/src/app/node_modules ./node_modules
 
