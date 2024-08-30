@@ -2,6 +2,7 @@
 FROM node:20.10.0-bullseye-slim AS base
 
 ENV PORT 8080
+ENV CHROMIUM_EXECUTABLE_PATH /usr/bin/chromium
 
 WORKDIR /usr/src/app
 
