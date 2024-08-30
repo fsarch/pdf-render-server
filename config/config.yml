@@ -1,0 +1,15 @@
+#database:
+#  type: sqlite
+#  database: ./example-data/database.sqlite3
+
+uac:
+  type: 'static'
+  users:
+    - user_id: 'abcdef'
+      permissions:
+        - manage_claims
+
+auth:
+  type: 'jwt-jwk'
+  jwkUrl: 'https://auth.vimuro.cloud/api/v1.0/systems/4e3ed3cf-d14c-40d0-a0a0-60529bc3a3b7/keys.json'
+
