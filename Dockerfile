@@ -1,7 +1,7 @@
 # Base
 FROM node:20.10.0-bullseye-slim AS base
 
-ENV PORT 8080
+ENV PORT 3000
 ENV CHROMIUM_EXECUTABLE_PATH /usr/bin/chromium
 
 WORKDIR /usr/src/app
@@ -39,7 +39,7 @@ FROM base
 
 ENV NODE_ENV production
 
-EXPOSE 8080
+EXPOSE 3000
 
 RUN apt-get update ; \
     apt-get --no-install-recommends install -y chromium ; \
