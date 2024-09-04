@@ -7,7 +7,7 @@ uac:
   users:
     - user_id: 'abcdef'
       permissions:
-        - manage_claims
+        - render_pdf
 
 auth:
   type: 'jwt-jwk'
