@@ -1,4 +1,5 @@
 import { IsEnum, IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export enum PaperFormat {
   LETTER = 'letter',
@@ -18,42 +19,58 @@ export enum PaperFormat {
 export class RenderPdfViewportOptionsDto {
   @IsNumber()
   @IsPositive()
+  @ApiProperty()
   width: number;
 
   @IsNumber()
   @IsPositive()
+  @ApiProperty()
   height: number;
 }
 
 export class RenderPdfExportOptionsDto {
   @IsString()
   @IsEnum(PaperFormat)
+  @ApiProperty({
+    enum: PaperFormat,
+  })
   format: PaperFormat;
 
   @IsNumber()
   @IsPositive()
   @IsOptional()
+  @ApiProperty({
+    required: false,
+  })
   width: number;
 
   @IsNumber()
   @IsPositive()
   @IsOptional()
+  @ApiProperty({
+    required: false,
+  })
   height: number;
 }
 
 export class RenderPdfOptionsDto {
+  @ApiProperty()
   viewport: RenderPdfViewportOptionsDto;
 
+  @ApiProperty()
   export: RenderPdfExportOptionsDto;
 }
 
 export class RenderPdfContentDto {
   @IsString()
+  @ApiProperty()
   html: string;
 }
 
 export class RenderPdfDto {
+  @ApiProperty()
   content: RenderPdfContentDto;
 
+  @ApiProperty()
   options: RenderPdfOptionsDto;
 }
