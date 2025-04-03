@@ -30,7 +30,13 @@ async function bootstrap() {
 
   const swaggerConfig = swaggerConfigBuilder.build();
   const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, documentFactory);
+  SwaggerModule.setup('docs', app, documentFactory, {
+    swaggerOptions: {
+      initOAuth: {
+        clientId: process.env.OPENID_CONNECT_CLIENT_ID,
+      },
+    },
+  });
   // endregion
 
   app.use(express.json({limit: '50mb'}));
