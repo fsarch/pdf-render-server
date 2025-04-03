@@ -1,5 +1,5 @@
 # Base
-FROM node:22.14.0-bullseye-slim AS base
+FROM node:22.14.0-bookworm-slim AS base
 
 ENV PORT 3000
 ENV CHROMIUM_EXECUTABLE_PATH /usr/bin/chromium
