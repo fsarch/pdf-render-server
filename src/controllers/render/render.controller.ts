@@ -12,10 +12,11 @@ import { RenderPdfDto } from "../../models/render/RenderPdfDto.js";
 import { RenderService } from "./render.service.js";
 import { Readable } from 'node:stream';
 import { Response } from 'express';
-import { ApiBearerAuth, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOAuth2, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('pdf')
 @ApiBearerAuth()
+@ApiOAuth2([])
 @Controller('pdf')
 export class RenderController {
   constructor(private readonly renderService: RenderService) {

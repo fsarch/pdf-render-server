@@ -12,14 +12,26 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  const config = new DocumentBuilder()
-    .setTitle('Material-Tracing-Server')
-    .setDescription('The Material-Tracing-Server API description')
+
+  // region Swagger
+  let swaggerConfigBuilder = new DocumentBuilder()
+    .setTitle('PDF-Render-Server')
+    .setDescription('The PDF-Render-Server API could be used to generate PDFs from simple HTML')
     .addBearerAuth()
-    .setVersion('1.0')
-    .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
+    .setVersion('1.0');
+
+  if (process.env.OPENID_CONNECT_DISCOVERY_URL) {
+    swaggerConfigBuilder = swaggerConfigBuilder.addOAuth2({
+      type: 'openIdConnect',
+      openIdConnectUrl: process.env.OPENID_CONNECT_DISCOVERY_URL,
+      in: 'header',
+    });
+  }
+
+  const swaggerConfig = swaggerConfigBuilder.build();
+  const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, documentFactory);
+  // endregion
 
   app.use(express.json({limit: '50mb'}));
 
