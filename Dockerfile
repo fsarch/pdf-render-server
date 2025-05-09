@@ -42,7 +42,7 @@ ENV NODE_ENV production
 EXPOSE 3000
 
 RUN apt-get update ; \
-    apt-get --no-install-recommends install -y chromium ; \
+    apt-get --no-install-recommends install -y chromium fonts-recommended ; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
