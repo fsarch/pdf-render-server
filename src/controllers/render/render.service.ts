@@ -1,32 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import puppeteer, { Page, PDFOptions } from "puppeteer";
+import { Injectable, Logger } from '@nestjs/common';
+import puppeteer, { Browser, Page, PDFOptions } from "puppeteer";
 import { PaperFormat, RenderPdfOptionsDto } from "../../models/render/RenderPdfDto.js";
 
-const BROWSER = puppeteer.launch({
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
-  args: ['--no-sandbox', '--disable-setuid-sandbox'],
-});
+let BROWSER: Promise<Browser>;
 
-let PAGE: Page | undefined;
+const logger = new Logger('render-service');
 
 async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
+  let shouldRecreateBrowser = false;
+
+  if (!BROWSER) {
+    shouldRecreateBrowser = true;
+    logger.log('no existing browser, creating new one');
+  } else {
+    try {
+      const browser = await BROWSER;
+
+      if (!browser.connected) {
+        shouldRecreateBrowser = true;
+        logger.log('existing browser not connected, force recreating');
+      }
+    } catch (error) {
+      shouldRecreateBrowser = true;
+      logger.error('error while waiting for existing browser, force recreating', {
+        error,
+      });
+    }
+  }
+
+  if (shouldRecreateBrowser) {
+    BROWSER = puppeteer.launch({
+      executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    logger.log('creating new browser instance');
+  }
+
   const browser = await BROWSER;
 
-  if (!PAGE) {
-    PAGE = await browser.newPage();
-    await PAGE.setJavaScriptEnabled(false);
-    PAGE.on('request', interceptedRequest => {
-      interceptedRequest.abort();
-      // interceptedRequest.continue();
-    });
-    await PAGE.setRequestInterception(true);
-  }
-  // const page = await browser.newPage();
-  const page = PAGE;
+  const page = await browser.newPage();
+  await page.setJavaScriptEnabled(false);
+  page.on('request', interceptedRequest => {
+    interceptedRequest.abort();
+    // interceptedRequest.continue();
+  });
+  await page.setRequestInterception(true);
 
   try {
     return await cb(page);
   } finally {
+    await page.close();
   }
 }
 
@@ -35,6 +58,11 @@ export class RenderService {
 
   public async RenderHtmlToPdf(html: string, options: RenderPdfOptionsDto): Promise<Uint8Array> {
     return usePage(async (page) => {
+      console.log('viewport', {
+        width: options.viewport.width,
+        height: options.viewport.height,
+      });
+
       await page.setViewport({
         width: options.viewport.width,
         height: options.viewport.height,
@@ -50,8 +78,13 @@ export class RenderService {
       };
 
       if (options.export.format === PaperFormat.CUSTOM) {
+        pdfOptions.landscape = false;
         pdfOptions.width = options.export.width;
         pdfOptions.height = options.export.height;
+        console.log('custom export', {
+          width: options.export.width,
+          height: options.export.height,
+        });
       } else {
         pdfOptions.format = options.export.format;
       }
