@@ -57,8 +57,17 @@ async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
 export class RenderService {
 
   public async RenderHtmlToPdf(html: string, options: RenderPdfOptionsDto): Promise<Uint8Array> {
+    logger.log('Starting PDF rendering');
+    logger.debug('Rendering options', {
+      viewport: {
+        width: options.viewport.width,
+        height: options.viewport.height,
+      },
+      export: options.export,
+    });
+
     return usePage(async (page) => {
-      console.log('viewport', {
+      logger.debug('Setting viewport', {
         width: options.viewport.width,
         height: options.viewport.height,
       });
@@ -68,6 +77,7 @@ export class RenderService {
         height: options.viewport.height,
       });
 
+      logger.debug('Setting page content, waiting for DOM content loaded');
       await page.setContent(html, {
         waitUntil: 'domcontentloaded',
         timeout: 10_000,
@@ -81,15 +91,24 @@ export class RenderService {
         pdfOptions.landscape = false;
         pdfOptions.width = options.export.width;
         pdfOptions.height = options.export.height;
-        console.log('custom export', {
+        logger.debug('Using custom paper format', {
           width: options.export.width,
           height: options.export.height,
         });
       } else {
         pdfOptions.format = options.export.format;
+        logger.debug('Using predefined paper format', {
+          format: options.export.format,
+        });
       }
 
-      return await page.pdf(pdfOptions);
+      logger.debug('Generating PDF from page');
+      const pdfBuffer = await page.pdf(pdfOptions);
+      logger.log('PDF generated successfully', {
+        size: pdfBuffer.length,
+      });
+
+      return pdfBuffer;
     });
   }
 }
