@@ -5,19 +5,21 @@ import {
   Body,
   Res,
 } from '@nestjs/common';
-import { AuthGuard } from "../../fsarch/auth/guards/auth.guard.js";
-import { Roles } from "../../fsarch/uac/decorators/roles.decorator.js";
-import { Role } from "../../fsarch/auth/role.enum.js";
+import { AuthGuard, Public } from "@fsarch/server/auth";
+import { Roles } from "@fsarch/server/uac";
+import { Role } from "../../constants/role.enum.js";
 import { RenderPdfDto } from "../../models/render/RenderPdfDto.js";
 import { RenderService } from "./render.service.js";
 import { Readable } from 'node:stream';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiOAuth2, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
+import fs from 'fs/promises';
 
 @ApiTags('pdf')
 @ApiBearerAuth()
 @ApiOAuth2([])
 @Controller('pdf')
+@Public()
 export class RenderController {
   constructor(private readonly renderService: RenderService) {
   }

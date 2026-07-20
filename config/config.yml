@@ -1,15 +1,10 @@
-#database:
-#  type: sqlite
-#  database: ./example-data/database.sqlite3
-
 uac:
-  type: 'static'
+  type: static
   users:
-    - user_id: 'abcdef'
+    - user_id: abcdef
       permissions:
         - render_pdf
 
 auth:
-  type: 'jwt-jwk'
-  jwkUrl: 'https://auth.vimuro.cloud/api/v1.0/systems/4e3ed3cf-d14c-40d0-a0a0-60529bc3a3b7/keys.json'
-
+  type: jwt-jwk
+  jwkUrl: https://login.manga-datenbank.de/realms/VB3D-Dev/protocol/openid-connect/certs
