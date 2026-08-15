@@ -19,18 +19,29 @@ jobs:
           version: latest
       - name: login to docker hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-      - name: determine image tag
+      - name: determine image tags
         id: image
         run: |
+          IMAGE=fsarch/pdf-render-server
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
-            echo "tag=fsarch/pdf-render-server:${VERSION}" >> "$GITHUB_OUTPUT"
+            TAGS="${IMAGE}:${VERSION}"
+            # only mark proper releases (no prerelease suffix, e.g. -beta.0) as stable
+            if [[ "${VERSION}" != *-* ]]; then
+              TAGS="${TAGS} ${IMAGE}:stable"
+            fi
           else
-            echo "tag=fsarch/pdf-render-server:latest" >> "$GITHUB_OUTPUT"
+            TAGS="${IMAGE}:latest"
           fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
       - name: build the image
         run: |
+          TAG_ARGS=""
+          for tag in ${{ steps.image.outputs.tags }}; do
+            TAG_ARGS="${TAG_ARGS} --tag ${tag}"
+          done
+
           docker buildx build \
-            --tag "${{ steps.image.outputs.tag }}" \
+            ${TAG_ARGS} \
             --platform linux/amd64,linux/arm64 \
             --push .
