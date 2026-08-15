@@ -51,9 +51,13 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --push .
       - name: notify helm-charts of the new release
+        # success() is required here because a custom `if:` replaces the
+        # step's implicit default (only run on success) - without it, this
+        # would still fire even if "build the image" failed and neither the
+        # version nor the :stable tag actually got pushed.
         # Only for proper releases (tags without a prerelease suffix), so
         # betas etc. don't bump the published chart.
-        if: steps.image.outputs.stable == 'true'
+        if: success() && steps.image.outputs.stable == 'true'
         run: |
           curl -sSf -X POST \
             -H "Authorization: Bearer ${{ secrets.HELM_CHARTS_DISPATCH_TOKEN }}" \
