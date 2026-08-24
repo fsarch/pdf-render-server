@@ -16,4 +16,4 @@ const app = await new FsArchAppBuilder(AppModule, {
 
 app.use(express.json({limit: '50mb'}));
 
-await app.listen(process.env.PORT ?? 3000);
+await app.listen(process.env.PORT ?? 8080);

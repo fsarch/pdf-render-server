@@ -39,7 +39,7 @@ FROM base
 
 ENV NODE_ENV production
 
-EXPOSE 3000
+EXPOSE 8080
 
 RUN apt-get update ; \
     apt-get --no-install-recommends install -y chromium fonts-recommended ; \
