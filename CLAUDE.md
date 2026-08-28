@@ -55,10 +55,14 @@ co-located `*.spec.ts`) when adding new endpoints, and register new feature modu
 
 **Auth & permissions**: endpoints are protected with `@UseGuards(AuthGuard)` + `@Roles(Role.xxx)` from
 `@fsarch/server/auth` and `@fsarch/server/uac`, not hand-rolled guards. Roles are declared centrally in
-`src/constants/role.enum.ts` (currently just `render_pdf`). The controller class itself is annotated `@Public()`
-but the individual route re-guards with `AuthGuard` — `@Public()` at class level does not mean the endpoints are
-open; check the guards on the actual route handler. Which `user_id`s hold which permissions is defined in the
-`uac:` section of `config.yaml` (static UAC provider).
+`src/constants/role.enum.ts` (currently just `render_pdf`). Do **not** put `@Public()` on a controller class that
+has any guarded route: `AuthGuard.canActivate()` resolves the `isPublic` flag via
+`reflector.getAllAndOverride(IS_PUBLIC_KEY, [handler, class])`, and `@Public()` has no handler-level override —
+so a class-level `@Public()` silently short-circuits `@UseGuards(AuthGuard)` on every method in that class and
+makes the "protected" route unauthenticated (confirmed by testing directly against `@fsarch/server`'s
+`AuthGuard` source, true in both 0.1.0 and 0.2.0). `@Public()` should only be used on controllers/routes that are
+meant to be fully open. Which `user_id`s hold which permissions is defined in the `uac:` section of `config.yaml`
+(static UAC provider).
 
 **PDF rendering (`render.service.ts`)**: maintains a single module-level lazy-initialized Puppeteer `Browser`
 instance (`BROWSER`) reused across requests rather than one browser per request; it self-heals by relaunching if

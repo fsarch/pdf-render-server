@@ -5,7 +5,7 @@ import {
   Body,
   Res,
 } from '@nestjs/common';
-import { AuthGuard, Public } from "@fsarch/server/auth";
+import { AuthGuard } from "@fsarch/server/auth";
 import { Roles } from "@fsarch/server/uac";
 import { Role } from "../../constants/role.enum.js";
 import { RenderPdfDto } from "../../models/render/RenderPdfDto.js";
@@ -19,7 +19,6 @@ import fs from 'fs/promises';
 @ApiBearerAuth()
 @ApiOAuth2([])
 @Controller('pdf')
-@Public()
 export class RenderController {
   constructor(private readonly renderService: RenderService) {
   }
