@@ -38,6 +38,11 @@ RUN npm run build
 FROM base
 
 ENV NODE_ENV production
+# Preloads OpenTelemetry auto-instrumentation (HTTP/Express/Nest) before the
+# app's own module graph loads — required for `tracing.enabled: true` in
+# config.yaml to actually instrument anything, no-op otherwise. See
+# https://github.com/fsarch/server#tracing-opentelemetry
+ENV NODE_OPTIONS "--import @fsarch/server/register"
 
 EXPOSE 8080
 

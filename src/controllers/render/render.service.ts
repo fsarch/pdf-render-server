@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import puppeteer, { Browser, Page, PDFOptions } from "puppeteer";
+import { Span, withSpan } from "@fsarch/server/tracing";
 import { PaperFormat, RenderPdfOptionsDto } from "../../models/render/RenderPdfDto.js";
 
 let BROWSER: Promise<Browser> | undefined;
@@ -7,44 +8,56 @@ let BROWSER: Promise<Browser> | undefined;
 const logger = new Logger('render-service');
 
 async function getBrowser(forceRecreate: boolean): Promise<Browser> {
-  let shouldRecreateBrowser = forceRecreate;
+  return withSpan(
+    'render.acquire-browser',
+    async (span) => {
+      let shouldRecreateBrowser = forceRecreate;
 
-  if (!BROWSER) {
-    shouldRecreateBrowser = true;
-    logger.log('no existing browser, creating new one');
-  } else if (!shouldRecreateBrowser) {
-    try {
-      const browser = await BROWSER;
-
-      if (!browser.connected) {
+      if (!BROWSER) {
         shouldRecreateBrowser = true;
-        logger.log('existing browser not connected, force recreating');
+        logger.log('no existing browser, creating new one');
+      } else if (!shouldRecreateBrowser) {
+        try {
+          const browser = await BROWSER;
+
+          if (!browser.connected) {
+            shouldRecreateBrowser = true;
+            logger.log('existing browser not connected, force recreating');
+          }
+        } catch (error) {
+          shouldRecreateBrowser = true;
+          logger.error('error while waiting for existing browser, force recreating', {
+            error,
+          });
+        }
       }
-    } catch (error) {
-      shouldRecreateBrowser = true;
-      logger.error('error while waiting for existing browser, force recreating', {
-        error,
-      });
-    }
-  }
 
-  if (shouldRecreateBrowser) {
-    logger.log('creating new browser instance');
-    BROWSER = puppeteer.launch({
-      executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        // The container's /dev/shm is typically capped at 64MB; Chromium's
-        // default shared-memory rendering blows through that and the
-        // renderer process silently dies mid-request (surfaces as
-        // "TargetCloseError: Session closed"). Fall back to disk instead.
-        '--disable-dev-shm-usage',
-      ],
-    });
-  }
+      span.setAttribute('render.browser_recreated', shouldRecreateBrowser);
 
-  return BROWSER;
+      if (shouldRecreateBrowser) {
+        logger.log('creating new browser instance');
+        // A fresh Chromium launch dominates render latency on this path (typically
+        // an order of magnitude slower than reusing the pooled browser) — the
+        // 'render.browser_recreated' attribute makes that cold-start cost visible
+        // in traces instead of it looking like an unexplained slow render.
+        BROWSER = puppeteer.launch({
+          executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            // The container's /dev/shm is typically capped at 64MB; Chromium's
+            // default shared-memory rendering blows through that and the
+            // renderer process silently dies mid-request (surfaces as
+            // "TargetCloseError: Session closed"). Fall back to disk instead.
+            '--disable-dev-shm-usage',
+          ],
+        });
+      }
+
+      return BROWSER;
+    },
+    { attributes: { 'render.force_recreate': forceRecreate } },
+  );
 }
 
 function isTargetClosedError(error: unknown): boolean {
@@ -88,6 +101,7 @@ async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
 @Injectable()
 export class RenderService {
 
+  @Span({ name: 'render.html-to-pdf' })
   public async RenderHtmlToPdf(html: string, options: RenderPdfOptionsDto): Promise<Uint8Array> {
     logger.log('Starting PDF rendering');
     logger.debug('Rendering options', {
@@ -110,10 +124,14 @@ export class RenderService {
       });
 
       logger.debug('Setting page content, waiting for DOM content loaded');
-      await page.setContent(html, {
-        waitUntil: 'domcontentloaded',
-        timeout: 10_000,
-      });
+      await withSpan(
+        'render.set-content',
+        () => page.setContent(html, {
+          waitUntil: 'domcontentloaded',
+          timeout: 10_000,
+        }),
+        { attributes: { 'render.html_size_bytes': Buffer.byteLength(html) } },
+      );
 
       const pdfOptions: PDFOptions = {
         timeout: 5_000,
@@ -135,7 +153,11 @@ export class RenderService {
       }
 
       logger.debug('Generating PDF from page');
-      const pdfBuffer = await page.pdf(pdfOptions);
+      const pdfBuffer = await withSpan(
+        'render.generate-pdf',
+        () => page.pdf(pdfOptions),
+        { attributes: { 'render.paper_format': options.export.format } },
+      );
       logger.log('PDF generated successfully', {
         size: pdfBuffer.length,
       });
