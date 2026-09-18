@@ -1,6 +1,7 @@
 import { AppModule } from './app.module.js';
 import { FsArchAppBuilder } from "@fsarch/server";
 import express from 'express';
+import { Role } from './constants/role.enum.js';
 
 const app = await new FsArchAppBuilder(AppModule, {
   name: 'PDF-Render-Server',
@@ -12,6 +13,8 @@ const app = await new FsArchAppBuilder(AppModule, {
     version: '1.0',
   })
   .enableAuth()
+  .enableUac(Object.values(Role))
+  .enableMcp()
   .build();
 
 app.use(express.json({limit: '50mb'}));

@@ -42,7 +42,7 @@ export class RenderPdfExportOptionsDto {
   @ApiProperty({
     required: false,
   })
-  width: number;
+  width?: number;
 
   @IsNumber()
   @IsPositive()
@@ -50,7 +50,7 @@ export class RenderPdfExportOptionsDto {
   @ApiProperty({
     required: false,
   })
-  height: number;
+  height?: number;
 }
 
 export class RenderPdfOptionsDto {

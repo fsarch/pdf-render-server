@@ -1,7 +1,7 @@
 # Base
-FROM node:24.11.1-bullseye-slim AS base
+FROM node:24.20.0-trixie-slim AS base
 
-ENV PORT 3000
+ENV PORT 8080
 ENV CHROMIUM_EXECUTABLE_PATH /usr/bin/chromium
 
 WORKDIR /usr/src/app
