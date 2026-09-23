@@ -1,0 +1,8 @@
+overrides:
+  ora: '^5.4.1'
+allowBuilds:
+  '@scarf/scarf': false
+  '@swc/core': true
+  better-sqlite3: true
+  protobufjs: true
+  puppeteer: true

@@ -1,11 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@fsarch/server/auth';
 import { McpController, Tool } from '@fsarch/server/mcp';
 import { Roles, RolesGuard } from '@fsarch/server/uac';
+import { UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import { Role } from '../../constants/role.enum.js';
-import { PaperFormat, RenderPdfOptionsDto } from '../../models/render/RenderPdfDto.js';
+import {
+  PaperFormat,
+  RenderPdfOptionsDto,
+} from '../../models/render/RenderPdfDto.js';
 import { RenderService } from './render.service.js';
 
 const RenderPdfParamsSchema = z
@@ -24,26 +27,39 @@ const RenderPdfParamsSchema = z
         height: z.number().positive().describe('Viewport height in pixels'),
       })
       .default({ width: 1240, height: 1754 })
-      .describe('Viewport size used while laying out the HTML before printing to PDF'),
+      .describe(
+        'Viewport size used while laying out the HTML before printing to PDF',
+      ),
     format: z
       .nativeEnum(PaperFormat)
       .default(PaperFormat.A4)
-      .describe(`Paper format, or "${PaperFormat.CUSTOM}" to use the width/height fields`),
+      .describe(
+        `Paper format, or "${PaperFormat.CUSTOM}" to use the width/height fields`,
+      ),
     width: z
       .number()
       .positive()
       .optional()
-      .describe(`Custom page width, only used when format is "${PaperFormat.CUSTOM}"`),
+      .describe(
+        `Custom page width, only used when format is "${PaperFormat.CUSTOM}"`,
+      ),
     height: z
       .number()
       .positive()
       .optional()
-      .describe(`Custom page height, only used when format is "${PaperFormat.CUSTOM}"`),
+      .describe(
+        `Custom page height, only used when format is "${PaperFormat.CUSTOM}"`,
+      ),
   })
-  .refine((data) => data.format !== PaperFormat.CUSTOM || (data.width != null && data.height != null), {
-    message: `width and height are required when format is "${PaperFormat.CUSTOM}"`,
-    path: ['width'],
-  });
+  .refine(
+    (data) =>
+      data.format !== PaperFormat.CUSTOM ||
+      (data.width != null && data.height != null),
+    {
+      message: `width and height are required when format is "${PaperFormat.CUSTOM}"`,
+      path: ['width'],
+    },
+  );
 
 // @Roles(...) on an MCP tool only takes effect with an explicit @UseGuards(AuthGuard, RolesGuard)
 // here: both are already registered globally, but Nest's global guards aren't applied to the
@@ -60,10 +76,17 @@ export class RenderMcpToolProvider {
     parameters: RenderPdfParamsSchema,
   })
   @Roles(Role.render_pdf)
-  async renderPdf({ html, viewport, format, width, height }: z.infer<typeof RenderPdfParamsSchema>) {
+  async renderPdf({
+    html,
+    viewport,
+    format,
+    width,
+    height,
+  }: z.infer<typeof RenderPdfParamsSchema>) {
     const options: RenderPdfOptionsDto = {
       viewport,
-      export: format === PaperFormat.CUSTOM ? { format, width, height } : { format },
+      export:
+        format === PaperFormat.CUSTOM ? { format, width, height } : { format },
     };
 
     const pdfBytes = await this.renderService.RenderHtmlToPdf(html, options);

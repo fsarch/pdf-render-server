@@ -1,7 +1,10 @@
+import { Span, withSpan } from '@fsarch/server/tracing';
 import { Injectable, Logger } from '@nestjs/common';
-import puppeteer, { Browser, Page, PDFOptions } from "puppeteer";
-import { Span, withSpan } from "@fsarch/server/tracing";
-import { PaperFormat, RenderPdfOptionsDto } from "../../models/render/RenderPdfDto.js";
+import puppeteer, { Browser, Page, PDFOptions } from 'puppeteer';
+import {
+  PaperFormat,
+  RenderPdfOptionsDto,
+} from '../../models/render/RenderPdfDto.js';
 
 let BROWSER: Promise<Browser> | undefined;
 
@@ -26,9 +29,12 @@ async function getBrowser(forceRecreate: boolean): Promise<Browser> {
           }
         } catch (error) {
           shouldRecreateBrowser = true;
-          logger.error('error while waiting for existing browser, force recreating', {
-            error,
-          });
+          logger.error(
+            'error while waiting for existing browser, force recreating',
+            {
+              error,
+            },
+          );
         }
       }
 
@@ -61,7 +67,10 @@ async function getBrowser(forceRecreate: boolean): Promise<Browser> {
 }
 
 function isTargetClosedError(error: unknown): boolean {
-  return error instanceof Error && /session closed|target closed/i.test(error.message);
+  return (
+    error instanceof Error &&
+    /session closed|target closed/i.test(error.message)
+  );
 }
 
 async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
@@ -73,7 +82,7 @@ async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
 
     const page = await browser.newPage();
     await page.setJavaScriptEnabled(false);
-    page.on('request', interceptedRequest => {
+    page.on('request', (interceptedRequest) => {
       interceptedRequest.abort();
       // interceptedRequest.continue();
     });
@@ -83,9 +92,12 @@ async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
       return await cb(page);
     } catch (error) {
       if (attempt === 0 && isTargetClosedError(error)) {
-        logger.warn('page crashed during rendering, retrying with a fresh browser', {
-          error,
-        });
+        logger.warn(
+          'page crashed during rendering, retrying with a fresh browser',
+          {
+            error,
+          },
+        );
         continue;
       }
       throw error;
@@ -100,9 +112,11 @@ async function usePage<T>(cb: (page: Page) => Promise<T>): Promise<T> {
 
 @Injectable()
 export class RenderService {
-
   @Span({ name: 'render.html-to-pdf' })
-  public async RenderHtmlToPdf(html: string, options: RenderPdfOptionsDto): Promise<Uint8Array> {
+  public async RenderHtmlToPdf(
+    html: string,
+    options: RenderPdfOptionsDto,
+  ): Promise<Uint8Array> {
     logger.log('Starting PDF rendering');
     logger.debug('Rendering options', {
       viewport: {
@@ -126,10 +140,11 @@ export class RenderService {
       logger.debug('Setting page content, waiting for DOM content loaded');
       await withSpan(
         'render.set-content',
-        () => page.setContent(html, {
-          waitUntil: 'domcontentloaded',
-          timeout: 10_000,
-        }),
+        () =>
+          page.setContent(html, {
+            waitUntil: 'domcontentloaded',
+            timeout: 10_000,
+          }),
         { attributes: { 'render.html_size_bytes': Buffer.byteLength(html) } },
       );
 

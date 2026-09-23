@@ -6,6 +6,6 @@ import { RenderService } from './render.service.js';
 @Module({
   imports: [],
   controllers: [RenderController, RenderMcpToolProvider],
-  providers: [RenderService]
+  providers: [RenderService],
 })
 export class RenderModule {}

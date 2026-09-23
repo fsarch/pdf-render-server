@@ -1,7 +1,6 @@
+import { AuthGuard } from '@fsarch/server/auth';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RenderController } from './render.controller.js';
-import { AuthGuard, Public } from '@fsarch/server/auth';
-import { Roles } from '@fsarch/server/uac';
 import { RenderService } from './render.service.js';
 
 describe('RenderController', () => {

@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AuthGuard } from '@fsarch/server/auth';
 import { RolesGuard } from '@fsarch/server/uac';
+import { Test, TestingModule } from '@nestjs/testing';
 import { PaperFormat } from '../../models/render/RenderPdfDto.js';
 import { RenderMcpToolProvider } from './render.mcp-tool.js';
 import { RenderService } from './render.service.js';
@@ -10,7 +10,9 @@ describe('RenderMcpToolProvider', () => {
   let renderService: { RenderHtmlToPdf: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    renderService = { RenderHtmlToPdf: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])) };
+    renderService = {
+      RenderHtmlToPdf: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RenderMcpToolProvider],

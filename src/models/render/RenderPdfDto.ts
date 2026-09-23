@@ -1,5 +1,11 @@
-import { IsEnum, IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export enum PaperFormat {
   LETTER = 'letter',

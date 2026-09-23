@@ -1,24 +1,26 @@
 # Base
 FROM node:24.20.0-trixie-slim AS base
 
-ENV PORT 8080
-ENV CHROMIUM_EXECUTABLE_PATH /usr/bin/chromium
+ENV PORT=8080
+ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+
+RUN corepack enable
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 
 # Production Deps
 FROM base AS deps
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN apt-get update && \
     apt-get install -y node-gyp && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-RUN npm ci --fetch-timeout=300000
+RUN pnpm install --frozen-lockfile --prod
 
 
 # Build Dockerfile
@@ -28,21 +30,21 @@ RUN apt-get update && \
     apt-get install -y node-gyp && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-RUN npm ci --fetch-timeout=300000
+RUN pnpm install --frozen-lockfile
 
 COPY . ./
-RUN npm run build
+RUN pnpm run build
 
 
 # Main Dockerfile
 FROM base
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 # Preloads OpenTelemetry auto-instrumentation (HTTP/Express/Nest) before the
 # app's own module graph loads — required for `tracing.enabled: true` in
 # config.yaml to actually instrument anything, no-op otherwise. See
 # https://github.com/fsarch/server#tracing-opentelemetry
-ENV NODE_OPTIONS "--import @fsarch/server/register"
+ENV NODE_OPTIONS="--import @fsarch/server/register"
 
 EXPOSE 8080
 
@@ -56,4 +58,3 @@ COPY --from=deps --chown=node:node /usr/src/app/node_modules ./node_modules
 USER node
 
 CMD ["node", "./dist/main.js"]
-

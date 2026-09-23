@@ -1,6 +1,6 @@
-import { AppModule } from './app.module.js';
-import { FsArchAppBuilder } from "@fsarch/server";
+import { FsArchAppBuilder } from '@fsarch/server';
 import express from 'express';
+import { AppModule } from './app.module.js';
 import { Role } from './constants/role.enum.js';
 
 const app = await new FsArchAppBuilder(AppModule, {
@@ -9,7 +9,8 @@ const app = await new FsArchAppBuilder(AppModule, {
 })
   .addSwagger({
     title: 'PDF-Render-Server',
-    description: 'The PDF-Render-Server API could be used to generate PDFs from simple HTML',
+    description:
+      'The PDF-Render-Server API could be used to generate PDFs from simple HTML',
     version: '1.0',
   })
   .enableAuth()
@@ -17,6 +18,6 @@ const app = await new FsArchAppBuilder(AppModule, {
   .enableMcp()
   .build();
 
-app.use(express.json({limit: '50mb'}));
+app.use(express.json({ limit: '50mb' }));
 
 await app.listen(process.env.PORT ?? 8080);

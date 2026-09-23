@@ -12,21 +12,25 @@ used across `fsarch`-prefixed services.
 ## Commands
 
 ```bash
-npm run start:dev     # run with watch mode (nest start --watch)
-npm run build         # nest build -> dist/
-npm run start:prod    # run built output (node dist/main)
+pnpm run start:dev     # run with watch mode (nest start --watch)
+pnpm run build         # nest build -> dist/
+pnpm run start:prod    # run built output (node dist/main)
 
-npm run lint          # eslint --fix over src/apps/libs/test
-npm run format        # prettier --write src/**/*.ts test/**/*.ts
+pnpm run lint          # biome check --write over src/test
+pnpm run format        # biome format --write src/test
 
-npm run test          # vitest run (unit tests, *.spec.ts, uses vitest.config.ts)
-npm run test:watch    # vitest watch mode
-npm run test:cov      # vitest run --coverage
-npm run test:e2e      # vitest run --config ./test/vitest.e2e.config.ts
+pnpm run test          # vitest run (unit tests, *.spec.ts, uses vitest.config.ts)
+pnpm run test:watch    # vitest watch mode
+pnpm run test:cov      # vitest run --coverage
+pnpm run test:e2e      # vitest run --config ./test/vitest.e2e.config.ts
 ```
 
-Run a single test file: `npx vitest run src/controllers/render/render.service.spec.ts`
-Run tests matching a name: `npx vitest run -t "should be defined"`
+Run a single test file: `pnpm exec vitest run src/controllers/render/render.service.spec.ts`
+Run tests matching a name: `pnpm exec vitest run -t "should be defined"`
+
+Package management is pnpm (via `corepack enable`, pinned through the `packageManager` field in `package.json`) —
+don't use `npm`/`npx`/`yarn`. `pnpm-workspace.yaml` carries the `pnpm.overrides`/build-script-approval settings
+that used to live under npm-style `package.json` keys (pnpm no longer reads `overrides`/`pnpm.overrides` there).
 
 There is no database in this service (no `setDatabase(...)` call in `main.ts`, no TypeORM entities), even though
 `typeorm`/`pg`/typeorm-related npm scripts exist as leftover boilerplate from the shared service template — don't
