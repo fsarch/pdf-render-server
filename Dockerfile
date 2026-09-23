@@ -50,6 +50,7 @@ EXPOSE 8080
 
 RUN apt-get update ; \
     apt-get --no-install-recommends install -y chromium fonts-recommended ; \
+    apt-get upgrade -y; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
